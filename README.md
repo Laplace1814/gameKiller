@@ -7,7 +7,7 @@
 运行中输入%USERPROFILE%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup,将软件放入该文件夹使软件开机自动启动
 
 注意事项:
-软件运行期间自动关闭任务管理器,并且不能被手动删除
+软件运行期间会自动关闭任务管理器,并且不能被手动删除
 
 未来待更新的内容:
 1.加入时间管理机制,强制限制一天内玩游戏的时间
