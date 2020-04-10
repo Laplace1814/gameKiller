@@ -3,11 +3,39 @@
 ProcessMgr::ProcessMgr() { 
 	BlackModuleList.push_back("mono");
 	BlackModuleList.push_back("d3d");
+	BlackModuleList.push_back("taskmgr");
+	
+	WhiteProcessList.push_back("explorer.exe");
 	WhiteProcessList.push_back("devenv.exe");
 	WhiteProcessList.push_back("servicehub");
+	WhiteProcessList.push_back("searchui");
+	WhiteProcessList.push_back("windowsinternal");
+	WhiteProcessList.push_back("edge");
+	WhiteProcessList.push_back("framehost");
+
+
 }	
 ProcessMgr::~ProcessMgr() {
 }
+
+
+bool ProcessMgr::isWhiteProcess(std::string str) {
+
+	int pos;
+	int result = 0;
+
+	for (auto Iter = WhiteProcessList.begin();
+		Iter != WhiteProcessList.end();
+		Iter++) {
+		transform(str.begin(), str.end(), str.begin(), (int(*)(int))tolower);
+		pos = str.find(Iter->c_str());
+		if (pos != str.npos) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 
 bool ProcessMgr::isWhiteProcess(std::string& str) {
 
@@ -83,15 +111,18 @@ void ProcessMgr::getProcessSnap() {
 	// 从快照中遍历所有进程
 	bRet = Process32First(hProcessSnap, &processEntry);
 	while (bRet) { 
-		std::vector<std::string>().swap(pProcessInformation.ModuleArray);
 
-		pProcessInformation.ProcessPid = processEntry.th32ProcessID;
-		pProcessInformation.ProcessName = processEntry.szExeFile;
+		if (!isWhiteProcess(processEntry.szExeFile)) {
+			std::vector<std::string>().swap(pProcessInformation.ModuleArray);
 
-		//printf("processName %s\n", processEntry.szExeFile);
+			pProcessInformation.ProcessPid = processEntry.th32ProcessID;
+			pProcessInformation.ProcessName = processEntry.szExeFile;
 
-		getModuleSnap(&pProcessInformation);
-		ProcessInfoList.push_back(pProcessInformation);
+			//printf("processName %s\n", processEntry.szExeFile);
+
+			getModuleSnap(&pProcessInformation);
+			ProcessInfoList.push_back(pProcessInformation);
+		}
 
 		bRet = Process32Next(hProcessSnap, &processEntry);
 	}	
@@ -99,9 +130,19 @@ void ProcessMgr::getProcessSnap() {
 	CloseHandle(hProcessSnap);
 }	
 
-void ProcessMgr::killProcess() { 
+void ProcessMgr::TerminateProcess(int pid) { 
 
 	HANDLE hProcess = 0;
+	hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+	if (hProcess) {
+		::TerminateProcess(hProcess, 0);
+		CloseHandle(hProcess);
+	}
+}
+
+
+void ProcessMgr::killProcess() { 
+
 	std::string szModuleName;
 	int result = 0;
 	unsigned int i = 0;
@@ -110,21 +151,15 @@ void ProcessMgr::killProcess() {
 		ProcessIter != ProcessInfoList.end(); 
 		ProcessIter++) {
 
-		if (isWhiteProcess(ProcessIter->ProcessName)) {
-			continue;
-		}	
+		if (isBlackModule(ProcessIter->ProcessName)) {
+			this->TerminateProcess(ProcessIter->ProcessPid);
+		}
+		
 		for (i = 0; i < ProcessIter->ModuleArray.size(); i++) { 
 			if (isBlackModule(ProcessIter->ModuleArray[i])) { 
-				//关闭进程
-				hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessIter->ProcessPid);
-				if (hProcess) { 
-					TerminateProcess(hProcess, 0);
-					CloseHandle(hProcess);
-				}	
+				this->TerminateProcess(ProcessIter->ProcessPid);
 			}
-			//Sleep(1);
 		}
-		//Sleep(1);
 	}
 }
 

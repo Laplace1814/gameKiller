@@ -19,9 +19,11 @@ public:
 	void getModuleSnap(ProcessInformation* pProcessInformation);
 	void getProcessSnap();
 	void killProcess();
+	void TerminateProcess(int pid);
 
 	bool isBlackModule(std::string& str);
 	bool isWhiteProcess(std::string& str);
+	bool isWhiteProcess(std::string str);
 private:
 	std::vector<std::string> WhiteProcessList;
 	std::vector<std::string> BlackModuleList;

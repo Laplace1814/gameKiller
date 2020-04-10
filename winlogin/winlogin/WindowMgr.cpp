@@ -7,6 +7,7 @@ WindowMgr::WindowMgr() {
 	BlackWindowList.push_back("7k7k");
 	BlackWindowList.push_back("三国杀");
 	BlackWindowList.push_back("小游戏");
+	//BlackWindowList.push_back("任务管理器");
 	pEnumWindowMgr = this;
 }
 
